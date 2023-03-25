@@ -10,11 +10,13 @@ static constexpr const uint8_t firmware_ver_patch = 8;
 static constexpr uint8_t frame_width  = 32;
 static constexpr uint8_t frame_height = 24;
 
-static constexpr inline float convertRawToCelsius(int32_t rawdata) {
-    return ((float)rawdata / 128) - 64.0f;
+static constexpr inline float convertRawToTemperature(int32_t rawdata) {
+    return ((((((float)rawdata / 128) - 64.0f)*9)/5)+32.0f); // Farenheit
+    // return ((float)rawdata / 128) - 64.0f; // Celcius
 }
-static constexpr inline int32_t convertCelsiusToRaw(float temperature) {
-    return (temperature + 64) * 128;
+static constexpr inline int32_t convertTemperatureToRaw(float temperature) {
+    return (((((temperature-32)*5)/9) + 64) * 128); // Farenheit
+    // return (temperature + 64) * 128; // Celcius
 }
 
 static constexpr const char mon_tbl[12][4] = {

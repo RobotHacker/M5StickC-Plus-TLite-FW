@@ -43,6 +43,7 @@ static constexpr const char* ntp_server[] = {"0.pool.ntp.org", "1.pool.ntp.org",
                                              "2.pool.ntp.org"};
 volatile bool need_wifi_reconnect         = false;
 
+
 extern "C" {
 void esp_timer_impl_update_apb_freq(
     uint32_t apb_ticks_per_us);  // private in IDF
@@ -65,7 +66,7 @@ static constexpr const int step_table[] = {1, 2, 5, 10, 20, 50, 100, 200};
 static constexpr const size_t step_table_len =
     sizeof(step_table) / sizeof(step_table[0]);
 
-const int32_t raw_step_offset = convertCelsiusToRaw(0.0f) - 128 * 1000;
+const int32_t raw_step_offset = convertTemperatureToRaw(0.0f) - 128 * 1000;
 // volatile size_t color_map_table_idx = 0;
 
 static constexpr size_t framedata_len = 6;
@@ -2098,7 +2099,7 @@ class image_ui_t : public ui_base_t {
                 result = true;
                 char text[8];
                 snprintf(text, sizeof(text), "%5.1f ",
-                         convertRawToCelsius(raw_));
+                         convertRawToTemperature(raw_));
 
                 const char* text_ptr = text;
                 /*
@@ -2406,7 +2407,7 @@ class graph_ui_t : public ui_base_t {
                         }
                     }
                 } else {
-                    int gauge_value = convertRawToCelsius(prev_raw * _step_raw +
+                    int gauge_value = convertRawToTemperature(prev_raw * _step_raw +
                                                           raw_step_offset);
                     canvas->setTextColor(((color >> 1) & 0x7BEF) + 0x630C);
                     canvas->drawNumber(gauge_value, _client_rect.x + 1, draw_y);
@@ -2461,9 +2462,9 @@ class infotext_ui_t : public ui_base_t {
     void update(draw_param_t* param) override {
         if (isModified(param)) {
             for (int i = 0; i < _text_count; ++i) {
-                float ftmp = convertRawToCelsius(param->frame->temp[i]);
+                float ftmp = convertRawToTemperature(param->frame->temp[i]);
                 int tmp =
-                    roundf(convertRawToCelsius(param->frame->temp[i]) * 10);
+                    roundf(convertRawToTemperature(param->frame->temp[i]) * 10);
                 bool mod     = (_value_x10[i] != tmp);
                 _text_mod[i] = mod;
                 if (mod) {
@@ -2614,7 +2615,7 @@ class hist_ui_t : public ui_base_t {
                 param->color_map[((i < 0 ? 0 : i) << 8) / (drawHeight + 1)];
             if (drawline) {
                 int gauge_value =
-                    convertRawToCelsius(prev_raw * _step_raw + raw_step_offset);
+                    convertRawToTemperature(prev_raw * _step_raw + raw_step_offset);
                 // img->setTextColor(((color >> 1) & 0x7BEF) + 0x630C);
                 // img->drawNumber(gauge_value, 1, y);
                 canvas->setTextColor(((color >> 1) & 0x7BEF) + 0x630C);
@@ -3662,7 +3663,7 @@ void setup(void) {
         if (draw_param.alarm_mode) {
             snprintf(lines[line_idx++], line_len, "Alarm:%s %3.1fC",
                      draw_param.alarm_mode.getText(),
-                     convertRawToCelsius(draw_param.alarm_temperature));
+                     convertRawToTemperature(draw_param.alarm_temperature));
         } else {
             snprintf(lines[line_idx++], line_len, "Alarm:%s",
                      draw_param.alarm_reference.getText());
@@ -4143,18 +4144,18 @@ std::string framedata_t::getJsonData(void) const {
                        macaddr[0], macaddr[1], macaddr[2], macaddr[3],
                        macaddr[4], macaddr[5]));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"center\": %3.1f,\r\n",
-                                 convertRawToCelsius(temp[center])));
+                                 convertRawToTemperature(temp[center])));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"average\": %3.1f,\r\n",
-                                 convertRawToCelsius(temp[average])));
+                                 convertRawToTemperature(temp[average])));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"highest\": %3.1f,\r\n",
-                                 convertRawToCelsius(temp[highest])));
+                                 convertRawToTemperature(temp[highest])));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"lowest\": %3.1f,\r\n",
-                                 convertRawToCelsius(temp[lowest])));
+                                 convertRawToTemperature(temp[lowest])));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"frame\": [%3.1f",
-                                 convertRawToCelsius(pixel_raw[0])));
+                                 convertRawToTemperature(pixel_raw[0])));
     for (uint_fast16_t i = 1; i < frame_width * frame_height; ++i) {
         result.append(cbuf, snprintf(cbuf, sizeof(cbuf), ",%3.1f",
-                                     convertRawToCelsius(pixel_raw[i])));
+                                     convertRawToTemperature(pixel_raw[i])));
     }
     result += "]\r\n}\r\n";
 
