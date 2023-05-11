@@ -1,3 +1,12 @@
+Modified to show temperatures in Fahrenheit.
+
+Future plans:
+- Shorten time to start up (reduce spash screen times.)
+- Add serial commands?
+  - Get pieces of info
+  - Turn off
+- Add temperature units (C/F) option to menu somewhere
+
 # T-Lite-Internal-FW (M5StickC-Plus + MLX90640 Thermal HAT)
 
 ### SKU:K126
