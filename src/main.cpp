@@ -3258,7 +3258,7 @@ static void cloudTask(void*) {
 
     static constexpr const int32_t prepare_sec = 3;
 
-    delay(1024);
+    delay(512);
 
     time_t time_next_upload = 0;
     time_t time_prev_upload = time(nullptr);
@@ -3641,7 +3641,7 @@ void setup(void) {
 
     xTaskCreatePinnedToCore(wifiTask, "wifiTask", 4096, nullptr, 3, nullptr,
                             PRO_CPU_NUM);
-    delay(512);
+    delay(16);
 
     {
         static constexpr size_t line_len = 64;
@@ -3681,7 +3681,7 @@ void setup(void) {
 
         // overlay_ui.setClientRect({ display.width() >> 1, display.height() >>
         // 1, 0, 0});
-        overlay_ui.show(128, lines[0], lines[1], lines[2], lines[3], lines[4],
+        overlay_ui.show(16, lines[0], lines[1], lines[2], lines[3], lines[4],
                         lines[5]);
     }
 
