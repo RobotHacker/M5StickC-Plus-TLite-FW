@@ -1,7 +1,7 @@
 Modified to show temperatures in Fahrenheit.
+Shortened time to start up (reduce spash screen times.)
 
 Future plans:
-- Shorten time to start up (reduce spash screen times.)
 - Add serial commands?
   - Get pieces of info
   - Turn off
