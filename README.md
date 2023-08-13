@@ -1,5 +1,6 @@
-Modified to show temperatures in Fahrenheit.
-Shortened time to start up (reduce spash screen times.)
+Changes:
+- Modified to show temperatures in Fahrenheit.
+- Shortened time to start up (reduce spash screen times.)
 
 Future plans:
 - Add serial commands?
