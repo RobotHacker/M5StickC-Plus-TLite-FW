@@ -1,6 +1,6 @@
 Changes:
 - Modified to show temperatures in Fahrenheit.
-- Shortened time to start up (reduce spash screen times.)
+- Shortened time to start up (reduce splash screen times.)
 
 Future plans:
 - Add serial commands?
