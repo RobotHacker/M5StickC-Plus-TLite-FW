@@ -212,7 +212,7 @@ static bool response_main(draw_param_t* draw_param, connection_t* conn) {
     strbuf += " <li> Temperature: <span id='at'>";
     strbuf.append(cbuf,
                   snprintf(cbuf, sizeof(cbuf), "%3.1f",
-                           convertRawToTemperature(draw_param->alarm_temperature)));
+                           convertRawToCelsius(draw_param->alarm_temperature, draw_param->misc_temp_mode)));
     strbuf +=
         "</span><br>\n<input width='400em' type='range' min='-50' max='350' "
         "step='0.5' id='alarm_temperature' onchange='f(\"alarm_temperature=\" "
@@ -288,7 +288,7 @@ static bool response_main(draw_param_t* draw_param, connection_t* conn) {
     strbuf += " <li> Upper Temperature: <span id='rh'>";
     strbuf.append(cbuf,
                   snprintf(cbuf, sizeof(cbuf), "%3.1f",
-                           convertRawToTemperature(draw_param->range_temp_upper)));
+                           convertRawToCelsius(draw_param->range_temp_upper, draw_param->misc_temp_mode)));
     strbuf +=
         "</span><br>\n<input width='400em' type='range' min='-50' max='350' "
         "step='0.5' id='range_temp_upper' onchange='f(\"range_temp_upper=\" "
@@ -297,7 +297,7 @@ static bool response_main(draw_param_t* draw_param, connection_t* conn) {
     strbuf += " <li> Lower Temperature: <span id='rl'>";
     strbuf.append(cbuf,
                   snprintf(cbuf, sizeof(cbuf), "%3.1f",
-                           convertRawToTemperature(draw_param->range_temp_lower)));
+                           convertRawToCelsius(draw_param->range_temp_lower, draw_param->misc_temp_mode)));
     strbuf +=
         "</span><br>\n<input width='400em' type='range' min='-50' max='350' "
         "step='0.5' id='range_temp_lower' onchange='f(\"range_temp_lower=\" "
@@ -411,13 +411,13 @@ static bool response_param(draw_param_t* draw_param, connection_t* conn) {
 
         if (key == "alarm_temperature") {
             draw_param->alarm_temperature =
-                convertTemperatureToRaw(atof(val.c_str()));
+                convertCelsiusToRaw(atof(val.c_str()), draw_param->misc_temp_mode);
         } else if (key == "range_temp_upper") {
             draw_param->range_temp_upper =
-                convertTemperatureToRaw(atof(val.c_str()));
+                convertCelsiusToRaw(atof(val.c_str()), draw_param->misc_temp_mode);
         } else if (key == "range_temp_lower") {
             draw_param->range_temp_lower =
-                convertTemperatureToRaw(atof(val.c_str()));
+                convertCelsiusToRaw(atof(val.c_str()), draw_param->misc_temp_mode);
         } else if (key == "cloud_token") {
             draw_param->cloud_token = val.c_str();
         } else {
@@ -471,7 +471,7 @@ static bool response_param(draw_param_t* draw_param, connection_t* conn) {
     strbuf.append(
         cbuf,
         snprintf(cbuf, sizeof(cbuf), "{\n \"alarm_temperature\": \"%3.1f\"",
-                 convertRawToTemperature(draw_param->alarm_temperature)));
+                 convertRawToCelsius(draw_param->alarm_temperature, draw_param->misc_temp_mode)));
     strbuf.append(cbuf,
                   snprintf(cbuf, sizeof(cbuf), ",\n \"alarm_mode\": \"%d\"",
                            draw_param->alarm_mode.get()));
@@ -496,11 +496,11 @@ static bool response_param(draw_param_t* draw_param, connection_t* conn) {
     strbuf.append(
         cbuf,
         snprintf(cbuf, sizeof(cbuf), ",\n \"range_temp_upper\": \"%3.1f\"",
-                 convertRawToTemperature(draw_param->range_temp_upper)));
+                 convertRawToCelsius(draw_param->range_temp_upper, draw_param->misc_temp_mode)));
     strbuf.append(
         cbuf,
         snprintf(cbuf, sizeof(cbuf), ",\n \"range_temp_lower\": \"%3.1f\"",
-                 convertRawToTemperature(draw_param->range_temp_lower)));
+                 convertRawToCelsius(draw_param->range_temp_lower, draw_param->misc_temp_mode)));
     strbuf.append(
         cbuf, snprintf(cbuf, sizeof(cbuf), ",\n \"net_jpg_quality\": \"%d\"",
                        draw_param->net_jpg_quality.get()));
@@ -549,13 +549,13 @@ static bool response_json(draw_param_t* draw_param, connection_t* conn) {
         auto t = time(nullptr);
         auto gmt = gmtime(&t);
         client->printf("{\"center\":\"%6.1f\",",
-       convertRawToTemperature(draw_param->frame->temp[framedata_t::center]));
+       convertRawToCelsius(draw_param->frame->temp[framedata_t::center]));
         client->printf("\"highest\":\"%6.1f\",",
-       convertRawToTemperature(draw_param->frame->temp[framedata_t::highest]));
+       convertRawToCelsius(draw_param->frame->temp[framedata_t::highest]));
         client->printf("\"average\":\"%6.1f\",",
-       convertRawToTemperature(draw_param->frame->temp[framedata_t::average]));
+       convertRawToCelsius(draw_param->frame->temp[framedata_t::average]));
         client->printf("\"lowest\":\"%6.1f\",",
-       convertRawToTemperature(draw_param->frame->temp[framedata_t::lowest]));
+       convertRawToCelsius(draw_param->frame->temp[framedata_t::lowest]));
         client->printf("\"date\":\"%s, %d %s %04d %02d:%02d:%02d GMT\"}\n",
        wday_tbl[gmt->tm_wday], gmt->tm_mday, mon_tbl[gmt->tm_mon], gmt->tm_year
        + 1900, gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
@@ -604,22 +604,22 @@ static bool response_text(draw_param_t* draw_param, connection_t* conn) {
         cbuf,
         snprintf(
             cbuf, sizeof(cbuf), "<tr><th>center </th><td>%3.1f</td></tr>\n",
-            convertRawToTemperature(draw_param->frame->temp[framedata_t::center])));
+            convertRawToCelsius(draw_param->frame->temp[framedata_t::center], draw_param->misc_temp_mode)));
     strbuf.append(cbuf,
                   snprintf(cbuf, sizeof(cbuf),
                            "<tr><th>highest</th><td>%3.1f</td></tr>\n",
-                           convertRawToTemperature(
-                               draw_param->frame->temp[framedata_t::highest])));
+                           convertRawToCelsius(
+                               draw_param->frame->temp[framedata_t::highest], draw_param->misc_temp_mode)));
     strbuf.append(cbuf,
                   snprintf(cbuf, sizeof(cbuf),
                            "<tr><th>average</th><td>%3.1f</td></tr>\n",
-                           convertRawToTemperature(
-                               draw_param->frame->temp[framedata_t::average])));
+                           convertRawToCelsius(
+                               draw_param->frame->temp[framedata_t::average], draw_param->misc_temp_mode)));
     strbuf.append(
         cbuf,
         snprintf(
             cbuf, sizeof(cbuf), "<tr><th>lowest </th><td>%3.1f</td></tr>\n",
-            convertRawToTemperature(draw_param->frame->temp[framedata_t::lowest])));
+            convertRawToCelsius(draw_param->frame->temp[framedata_t::lowest], draw_param->misc_temp_mode)));
     strbuf += "</table></body></html>\n\n";
 
     client->print(

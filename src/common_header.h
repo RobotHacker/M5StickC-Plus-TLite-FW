@@ -5,19 +5,65 @@
 
 static constexpr const uint8_t firmware_ver_major = 0;
 static constexpr const uint8_t firmware_ver_minor = 0;
-static constexpr const uint8_t firmware_ver_patch = 8;
+static constexpr const uint8_t firmware_ver_patch = 10;
 
 static constexpr uint8_t frame_width  = 32;
 static constexpr uint8_t frame_height = 24;
 
-static constexpr inline float convertRawToTemperature(int32_t rawdata) {
-    return ((((((float)rawdata / 128) - 64.0f)*9)/5)+32.0f); // Farenheit
-    // return ((float)rawdata / 128) - 64.0f; // Celcius
-}
-static constexpr inline int32_t convertTemperatureToRaw(float temperature) {
-    return (((((temperature-32)*5)/9) + 64) * 128); // Farenheit
-    // return (temperature + 64) * 128; // Celcius
-}
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  // static constexpr inline float convertRawToCelsius(int32_t rawdata) {
+  //     return ((float)rawdata / 128) - 64.0f;
+  // }
+
+   static  inline float convertRawToCelsius(int32_t rawdata, int temp_mode ) {
+    float value = 0 ;
+
+    if( temp_mode == 1 )
+        value =  ((((((float)rawdata / 128) - 64.0f)*9)/5)+32.0f); 
+    else
+        value = ((float)rawdata / 128) - 64.0f;
+
+    return value ;
+   }
+
+
+static inline float convertCelsiusToRaw(float temperature, int temp_mode ) {
+    float value = 0 ;
+
+    if( temp_mode == 1 )
+        value =  (((((temperature-32)*5)/9) + 64) * 128); 
+    else
+        value = (temperature + 64) * 128;
+
+    return value ;
+   }
+
+
+
+
+   static constexpr inline int32_t convertCelsiusToRaw(float temperature) {
+    return (temperature + 64) * 128;
+   }
+
+
+//return (((((temperature-32)*5)/9) + 64) * 128); // Farenheit
+   
+    
+    
 
 static constexpr const char mon_tbl[12][4] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -986,6 +1032,19 @@ struct config_param_t {
         misc_color_max,
     };
 
+
+    enum misc_temp_mode_t {
+       
+        misc_temp_mode_Celsius,
+        misc_temp_mode_Fahrenheit,
+        misc_temp_mode_max,
+    };
+    static constexpr const int temp_mode_value[] = {0, 1};
+    
+    
+
+
+
     enum cloud_interval_t {
         cloud_interval_5sec,
         cloud_interval_10sec,
@@ -1049,6 +1108,7 @@ struct config_param_t {
     static void misc_brightness_func(misc_brightness_t);
     static void misc_language_func(misc_language_t);
     static void misc_volume_func(misc_volume_t);
+    
     static void misc_color_func(misc_color_t v);
     static void misc_backtofactory_func(uint8_t);
 
@@ -1073,6 +1133,35 @@ struct config_param_t {
         },
         net_setup_mode_t ::net_setup_mode_off,
         net_setup_mode_t ::net_setup_mode_max};
+
+
+
+
+
+    config_property_localize_enum_t<misc_temp_mode_t> misc_temp_mode = {
+        {"Temperature", "温度", "温度"},
+        (const localize_text_t[]){
+            {"Celcius", "摄氏度", "摂氏"},
+            {"Fahrenheit", "华氏度", "華氏"},
+            
+
+        },
+        misc_temp_mode_t ::misc_temp_mode_Fahrenheit,
+        misc_temp_mode_t ::misc_temp_mode_max};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     config_property_localize_enum_t<cloud_interval_t> cloud_interval = {
         {"Upload Interval", "上传间隔时间", "アップロード間隔"},
@@ -1249,6 +1338,13 @@ struct config_param_t {
         misc_language_t ::misc_language_max,
         misc_language_func};
 
+
+    
+
+
+    
+    
+    
     // config_property_enum_t<misc_language_t>    misc_language     = {
     // misc_language_text          , misc_language_t   ::misc_language_en ,
     // misc_language_t   ::misc_language_max, misc_language_func };

@@ -11,6 +11,7 @@ constexpr const char* config_param_t::common_off_on_text[];
 
 constexpr const char* config_param_t::misc_language_text[];
 
+
 constexpr const uint8_t config_param_t::misc_cpuspeed_value[];
 constexpr const uint8_t config_param_t::sens_refreshrate_value[];
 constexpr const uint8_t config_param_t::sens_noisefilter_value[];

@@ -43,7 +43,6 @@ static constexpr const char* ntp_server[] = {"0.pool.ntp.org", "1.pool.ntp.org",
                                              "2.pool.ntp.org"};
 volatile bool need_wifi_reconnect         = false;
 
-
 extern "C" {
 void esp_timer_impl_update_apb_freq(
     uint32_t apb_ticks_per_us);  // private in IDF
@@ -66,7 +65,7 @@ static constexpr const int step_table[] = {1, 2, 5, 10, 20, 50, 100, 200};
 static constexpr const size_t step_table_len =
     sizeof(step_table) / sizeof(step_table[0]);
 
-const int32_t raw_step_offset = convertTemperatureToRaw(0.0f) - 128 * 1000;
+const int32_t raw_step_offset = convertCelsiusToRaw(0.0f, draw_param.misc_temp_mode) - 128 * 1000;
 // volatile size_t color_map_table_idx = 0;
 
 static constexpr size_t framedata_len = 6;
@@ -220,6 +219,7 @@ static constexpr const char KEY_NET_RUNNING_MODE[] = "net_running";
 static constexpr const char KEY_NET_JPGQUALITY[]   = "jpg_quality";
 static constexpr const char KEY_CLOUD_UPLOAD[]     = "upload_ena";
 static constexpr const char KEY_CLOUD_INTERVAL[]   = "upload_int";
+static constexpr const char KEY_MISC_TEMP_MODE[]   = "temp_mode";
 static constexpr const char KEY_CLOUD_TOKEN[]      = "ezdata_token";
 static constexpr const char KEY_NET_TIMEZONE[]     = "timezone";
 static constexpr const char KEY_MISC_CPUSPEED[]    = "cpuspeed";
@@ -260,12 +260,10 @@ void config_param_t::saveNvs(void) {
     pref.putUShort(KEY_RANGE_UPPER, range_temp_upper);
     pref.putUShort(KEY_RANGE_LOWER, range_temp_lower);
     pref.putUChar(KEY_NET_RUNNING_MODE, net_running_mode);
-    // pref.putUChar( KEY_NET_SETUP_MODE   , net_setup_mode       );
-    // pref.putBool(  KEY_NET_WEBSERVER    , net_webserver        );
     pref.putUChar(KEY_NET_JPGQUALITY, net_jpg_quality);
     pref.putInt(KEY_NET_TIMEZONE, oncloud_timezone_sec);
-    // pref.putBool(  KEY_CLOUD_UPLOAD     , cloud_upload         );
     pref.putUChar(KEY_CLOUD_INTERVAL, cloud_interval);
+    pref.putUChar(KEY_MISC_TEMP_MODE, misc_temp_mode);
     pref.putUChar(KEY_MISC_BRIGHTNESS, misc_brightness);
     pref.putUChar(KEY_MISC_VOLUME, misc_volume);
     pref.putUChar(KEY_MISC_LANGUAGE, misc_language);
@@ -273,9 +271,7 @@ void config_param_t::saveNvs(void) {
     pref.putUChar(KEY_MISC_LAYOUT, misc_layout);
     pref.putUChar(KEY_MISC_COLOR, misc_color);
     pref.putString(KEY_CLOUD_TOKEN, cloud_token.c_str());
-    // pref.putString(KEY_NET_SSID         , net_ssid.c_str()     );
-    // pref.putString(KEY_NET_PWD          , convert(net_pwd).c_str());
-    // pref.putUChar( KEY_MISC_ROTATION    , misc_rotation        );
+
     pref.end();
     ESP_LOGD("DEBUG", "saveNvs out");
 }
@@ -296,6 +292,7 @@ void config_param_t::loadNvs(void) {
             KEY_SENS_REFRESHRATE, sens_refreshrate);
         sens_noisefilter = (sens_noisefilter_t)pref.getUChar(
             KEY_SENS_NOISEFILTER, sens_noisefilter);
+        misc_temp_mode = (misc_temp_mode_t)pref.getUChar(KEY_MISC_TEMP_MODE, misc_temp_mode);
         sens_monitorarea = (sens_monitorarea_t)pref.getUChar(
             KEY_SENS_MONITORAREA, sens_monitorarea);
         sens_emissivity  = pref.getUChar(KEY_SENS_EMISSIVITY, sens_emissivity);
@@ -365,6 +362,7 @@ void config_param_t::loadDefault(void) {
     misc_color.setDefault();
     misc_pointer = misc_pointer_t ::misc_pointer_pointtxt;
     misc_volume  = misc_volume_t ::misc_volume_normal;
+    misc_temp_mode = misc_temp_mode_t ::misc_temp_mode_Celsius;
 }
 
 void config_param_t::setEmissivity(uint8_t emissivity) {
@@ -1669,6 +1667,7 @@ class config_ui_t : public container_ui_t {
             new value_ui_t{&lt_Sens_TempLowest, &draw_param.range_temp_lower});
         misc_config_ui.addItem(new value_ui_t{&draw_param.misc_language, true});
         misc_config_ui.addItem(new value_ui_t{&draw_param.misc_cpuspeed, true});
+        misc_config_ui.addItem(new value_ui_t{&draw_param.misc_temp_mode, true});
         misc_config_ui.addItem(new value_ui_t{&draw_param.misc_volume, true});
         misc_config_ui.addItem(
             new value_ui_t{&draw_param.misc_brightness, true});
@@ -2099,7 +2098,7 @@ class image_ui_t : public ui_base_t {
                 result = true;
                 char text[8];
                 snprintf(text, sizeof(text), "%5.1f ",
-                         convertRawToTemperature(raw_));
+                         convertRawToCelsius(raw_ , draw_param.misc_temp_mode));
 
                 const char* text_ptr = text;
                 /*
@@ -2407,8 +2406,10 @@ class graph_ui_t : public ui_base_t {
                         }
                     }
                 } else {
-                    int gauge_value = convertRawToTemperature(prev_raw * _step_raw +
-                                                          raw_step_offset);
+                        int gauge_value = convertRawToCelsius(prev_raw * _step_raw +
+                                                          raw_step_offset, draw_param.misc_temp_mode);
+                   
+                    
                     canvas->setTextColor(((color >> 1) & 0x7BEF) + 0x630C);
                     canvas->drawNumber(gauge_value, _client_rect.x + 1, draw_y);
                     if (draw_y >= h) {
@@ -2462,9 +2463,9 @@ class infotext_ui_t : public ui_base_t {
     void update(draw_param_t* param) override {
         if (isModified(param)) {
             for (int i = 0; i < _text_count; ++i) {
-                float ftmp = convertRawToTemperature(param->frame->temp[i]);
+                float ftmp = convertRawToCelsius(param->frame->temp[i], draw_param.misc_temp_mode);
                 int tmp =
-                    roundf(convertRawToTemperature(param->frame->temp[i]) * 10);
+                    roundf(convertRawToCelsius(param->frame->temp[i], draw_param.misc_temp_mode) * 10);
                 bool mod     = (_value_x10[i] != tmp);
                 _text_mod[i] = mod;
                 if (mod) {
@@ -2615,7 +2616,7 @@ class hist_ui_t : public ui_base_t {
                 param->color_map[((i < 0 ? 0 : i) << 8) / (drawHeight + 1)];
             if (drawline) {
                 int gauge_value =
-                    convertRawToTemperature(prev_raw * _step_raw + raw_step_offset);
+                    convertRawToCelsius(prev_raw * _step_raw + raw_step_offset, draw_param.misc_temp_mode);
                 // img->setTextColor(((color >> 1) & 0x7BEF) + 0x630C);
                 // img->drawNumber(gauge_value, 1, y);
                 canvas->setTextColor(((color >> 1) & 0x7BEF) + 0x630C);
@@ -3526,6 +3527,7 @@ void setup(void) {
 
     display.setBrightness(32);
     M5.begin();
+    M5.BtnPWR.setHoldThresh(1024);
     display.setRotation(1);
     display.drawBmp(bmp_logo, sizeof(bmp_logo), 0, 0, display.width(),
                     display.height(), 0, 0, 1.0f, 1.0f, datum_t::middle_center);
@@ -3637,6 +3639,9 @@ void setup(void) {
                 draw_param.sys_ssid = (char*)(current_conf.sta.ssid);
             }
         }
+        // if (draw_param.sys_ssid.empty()) {
+        //     WiFi.begin("YOUR_DEFAULT_SSID", "YOUR_DEFAULT_PASSWORD");
+        // }
     }
 
     xTaskCreatePinnedToCore(wifiTask, "wifiTask", 4096, nullptr, 3, nullptr,
@@ -3663,7 +3668,7 @@ void setup(void) {
         if (draw_param.alarm_mode) {
             snprintf(lines[line_idx++], line_len, "Alarm:%s %3.1fC",
                      draw_param.alarm_mode.getText(),
-                     convertRawToTemperature(draw_param.alarm_temperature));
+                     convertRawToCelsius(draw_param.alarm_temperature, draw_param.misc_temp_mode));
         } else {
             snprintf(lines[line_idx++], line_len, "Alarm:%s",
                      draw_param.alarm_reference.getText());
@@ -3725,10 +3730,11 @@ void loop(void) {
                 prev_dc = dc;
             }
 
+            command_processor::updateBattery();
             delay(1);
+            draw_param.battery_state = command_processor::getBatteryState();
+            draw_param.battery_level = command_processor::getBatteryLevel();
             if (M5.Power.getType() == m5::Power_Class::pmic_axp192) {
-                draw_param.battery_state = M5.Power.isCharging();
-                draw_param.battery_level = M5.Power.getBatteryLevel();
                 static bool prev_acin;
                 if (prev_acin != M5.Power.Axp192.isVBUS()) {
                     prev_acin = !prev_acin;
@@ -4144,18 +4150,18 @@ std::string framedata_t::getJsonData(void) const {
                        macaddr[0], macaddr[1], macaddr[2], macaddr[3],
                        macaddr[4], macaddr[5]));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"center\": %3.1f,\r\n",
-                                 convertRawToTemperature(temp[center])));
+                                 convertRawToCelsius(temp[center], draw_param.misc_temp_mode)));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"average\": %3.1f,\r\n",
-                                 convertRawToTemperature(temp[average])));
+                                 convertRawToCelsius(temp[average], draw_param.misc_temp_mode)));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"highest\": %3.1f,\r\n",
-                                 convertRawToTemperature(temp[highest])));
+                                 convertRawToCelsius(temp[highest], draw_param.misc_temp_mode)));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"lowest\": %3.1f,\r\n",
-                                 convertRawToTemperature(temp[lowest])));
+                                 convertRawToCelsius(temp[lowest], draw_param.misc_temp_mode)));
     result.append(cbuf, snprintf(cbuf, sizeof(cbuf), " \"frame\": [%3.1f",
-                                 convertRawToTemperature(pixel_raw[0])));
+                                 convertRawToCelsius(pixel_raw[0], draw_param.misc_temp_mode)));
     for (uint_fast16_t i = 1; i < frame_width * frame_height; ++i) {
         result.append(cbuf, snprintf(cbuf, sizeof(cbuf), ",%3.1f",
-                                     convertRawToTemperature(pixel_raw[i])));
+                                     convertRawToCelsius(pixel_raw[i], draw_param.misc_temp_mode)));
     }
     result += "]\r\n}\r\n";
 
