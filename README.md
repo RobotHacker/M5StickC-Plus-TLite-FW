@@ -1,12 +1,11 @@
 Changes:
-- Modified to show temperatures in Fahrenheit.
 - Shortened time to start up (reduce splash screen times.)
-
+- Add temperature units (C/F) option to menu somewhere
 Future plans:
 - Add serial commands?
   - Get pieces of info
   - Turn off
-- Add temperature units (C/F) option to menu somewhere
+
 
 # T-Lite-Internal-FW (M5StickC-Plus + MLX90640 Thermal HAT)
 
