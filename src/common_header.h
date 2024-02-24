@@ -11,25 +11,7 @@ static constexpr uint8_t frame_width  = 32;
 static constexpr uint8_t frame_height = 24;
 
 
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-  // static constexpr inline float convertRawToCelsius(int32_t rawdata) {
-  //     return ((float)rawdata / 128) - 64.0f;
-  // }
-
-   static  inline float convertRawToCelsius(int32_t rawdata, int temp_mode ) {
+   static inline float convertRawToCelsius(int32_t rawdata, int temp_mode ) {
     float value = 0 ;
 
     if( temp_mode == 1 )
@@ -52,18 +34,6 @@ static inline float convertCelsiusToRaw(float temperature, int temp_mode ) {
     return value ;
    }
 
-
-
-
-   static constexpr inline int32_t convertCelsiusToRaw(float temperature) {
-    return (temperature + 64) * 128;
-   }
-
-
-//return (((((temperature-32)*5)/9) + 64) * 128); // Farenheit
-   
-    
-    
 
 static constexpr const char mon_tbl[12][4] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
