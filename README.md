@@ -1,8 +1,11 @@
 Changes:
 - Shortened time to start up (reduce splash screen times.)
 - Add temperature units (C/F) option to menu somewhere
+
+
+
 Future plans:
-- Add serial commands?
+  - Add serial commands?
   - Get pieces of info
   - Turn off
 
