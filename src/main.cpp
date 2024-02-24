@@ -207,7 +207,6 @@ static constexpr const char NVS_NAMESPACE[]         = "__tlite_nvs__";
 static constexpr const char KEY_ALARM_TEMPERATURE[] = "alm_temp";
 static constexpr const char KEY_ALARM_REFERENCE[]   = "alm_ref";
 static constexpr const char KEY_ALARM_MODE[]        = "alm_mode";
-// static constexpr const char KEY_ALARM_BEHAVIOR[]    = "alm_behavior";
 static constexpr const char KEY_SENS_REFRESHRATE[] = "refreshrate";
 static constexpr const char KEY_SENS_NOISEFILTER[] = "noisefilter";
 static constexpr const char KEY_SENS_MONITORAREA[] = "monitorarea";
@@ -219,7 +218,6 @@ static constexpr const char KEY_NET_RUNNING_MODE[] = "net_running";
 static constexpr const char KEY_NET_JPGQUALITY[]   = "jpg_quality";
 static constexpr const char KEY_CLOUD_UPLOAD[]     = "upload_ena";
 static constexpr const char KEY_CLOUD_INTERVAL[]   = "upload_int";
-static constexpr const char KEY_MISC_TEMP_MODE[]   = "temp_mode";
 static constexpr const char KEY_CLOUD_TOKEN[]      = "ezdata_token";
 static constexpr const char KEY_NET_TIMEZONE[]     = "timezone";
 static constexpr const char KEY_MISC_CPUSPEED[]    = "cpuspeed";
@@ -229,7 +227,8 @@ static constexpr const char KEY_MISC_LANGUAGE[]    = "language";
 static constexpr const char KEY_MISC_LAYOUT[]      = "layout";
 static constexpr const char KEY_MISC_COLOR[]       = "color";
 static constexpr const char KEY_MISC_POINTER[]     = "pointer";
-// static constexpr const char KEY_MISC_ROTATION[]     = "msc_rotation";
+static constexpr const char KEY_MISC_TEMP_MODE[]   = "temp_mode";
+
 
 std::string convert(const std::string& src) {
     std::string res;
@@ -271,7 +270,6 @@ void config_param_t::saveNvs(void) {
     pref.putUChar(KEY_MISC_LAYOUT, misc_layout);
     pref.putUChar(KEY_MISC_COLOR, misc_color);
     pref.putString(KEY_CLOUD_TOKEN, cloud_token.c_str());
-
     pref.end();
     ESP_LOGD("DEBUG", "saveNvs out");
 }
@@ -1647,7 +1645,8 @@ class config_ui_t : public container_ui_t {
             new token_ui_t{&lt_Cloud_Confirm_Code, &draw_param.cloud_token});
         cloud_config_ui.addItem(
             new value_ui_t{&draw_param.cloud_interval, true});
-        alarm_config_ui.addItem(new value_ui_t{&draw_param.alarm_mode, true});
+        alarm_config_ui.addItem(
+            new value_ui_t{&draw_param.alarm_mode, true});
         alarm_config_ui.addItem(
             new value_ui_t{&lt_Temperature, &draw_param.alarm_temperature});
         alarm_config_ui.addItem(
@@ -3665,6 +3664,15 @@ void setup(void) {
             snprintf(lines[line_idx++], line_len, "Mode:%s",
                      draw_param.net_running_mode.getText());
         }
+
+
+
+
+
+
+
+
+
         if (draw_param.alarm_mode) {
             snprintf(lines[line_idx++], line_len, "Alarm:%s %3.1fC",
                      draw_param.alarm_mode.getText(),
