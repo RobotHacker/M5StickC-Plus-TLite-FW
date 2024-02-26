@@ -10,7 +10,7 @@ Future plans:
 -none (give me idea's)
 
 
-# T-Lite-Internal-FW (M5StickC-Plus + MLX90640 Thermal HAT)
+# T-Lite-Internal-CFW (M5StickC-Plus + MLX90640 Thermal HAT)
 
 ### SKU:K126
 
