@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <M5GFX.h>
 #include <WiFi.h>
-
+static int currenttempmode;
 static constexpr const uint8_t firmware_ver_major = 0;
 static constexpr const uint8_t firmware_ver_minor = 0;
 static constexpr const uint8_t firmware_ver_patch = 10;
@@ -13,7 +13,7 @@ static constexpr uint8_t frame_height = 24;
 
    static inline float convertRawToCelsius(int32_t rawdata, int temp_mode ) {
     float value = 0 ;
-
+    currenttempmode = temp_mode;
     if( temp_mode == 1 )
         value =  ((((((float)rawdata / 128) - 64.0f)*9)/5)+32.0f); 
     else
@@ -23,7 +23,7 @@ static constexpr uint8_t frame_height = 24;
    }
 
 
-static inline float convertCelsiusToRaw(float temperature, int temp_mode ) {
+   static inline float convertCelsiusToRaw(float temperature, int temp_mode ) {
     float value = 0 ;
 
     if( temp_mode == 1 )
@@ -1046,21 +1046,19 @@ enum alarm_temp_mode_t {
 
 
 
-static void alarm_temperature_text_func(char* text_buf, size_t buf_len, uint16_t v) {
-    float temperature;
-    
-    
-        temperature = (((((float)v / 128) - 64.0f) * 9) / 5) + 32.0f;
-        snprintf(text_buf, buf_len, "%3.1fF", temperature);
-    
+
+    static void alarm_temperature_text_func(char* text_buf, size_t buf_len, uint16_t v) {
+        float temperature;
         
-        //temperature = ((float)v / 128) - 64.0f;
-        //snprintf(text_buf, buf_len, "%3.1fC", temperature);
-    
-
-    
-}
-
+        if ( currenttempmode == 1 ){
+            temperature = (((((float)v / 128) - 64.0f) * 9) / 5) + 32.0f;
+            snprintf(text_buf, buf_len, "%3.1fF", temperature);
+            }
+            else{
+            temperature = ((float)v / 128) - 64.0f;
+            snprintf(text_buf, buf_len, "%3.1fC", temperature);
+            }
+    }
     static void sens_temperature_text_func(char* text_buf, size_t buf_len,
                                            int32_t v) {
         snprintf(text_buf, buf_len, "%3.1fC", (float)v / 128 - 64);
