@@ -1,13 +1,12 @@
 Changes:
 - Shortened time to start up (reduce splash screen times.)
-- Add temperature units (C/F) option to menu somewhere
+- Added temperature units (C/F) option to other settings.
+- 
 
 
 
 Future plans:
-  - Add serial commands?
-  - Get pieces of info
-  - Turn off
+-none (give me idea's)
 
 
 # T-Lite-Internal-FW (M5StickC-Plus + MLX90640 Thermal HAT)
