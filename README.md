@@ -7,8 +7,7 @@ Changes:
 - now avalable in M5burner!
 
 
-Future plans:
--none (give me idea's)
+Future plans: none (give me idea's)
 
 
 # T-Lite-Internal-CFW (M5StickC-Plus + MLX90640 Thermal HAT)
