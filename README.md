@@ -3,7 +3,7 @@ Changes:
 - Added temperature units (C/F) option to other settings.
 - the alarm setting works you just have to change the value to update the text.
   
-
+-now avalable in M5burner
 
 
 Future plans:
