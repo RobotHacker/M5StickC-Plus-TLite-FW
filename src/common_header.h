@@ -1059,10 +1059,24 @@ enum alarm_temp_mode_t {
             snprintf(text_buf, buf_len, "%3.1fC", temperature);
             }
     }
-    static void sens_temperature_text_func(char* text_buf, size_t buf_len,
-                                           int32_t v) {
-        snprintf(text_buf, buf_len, "%3.1fC", (float)v / 128 - 64);
+
+    static void sens_temperature_text_func(char* text_buf, size_t buf_len, int32_t v) {
+        float temperature;
+        
+            if ( currenttempmode == 1 ){
+            temperature = (((((float)v / 128) - 64.0f) * 9) / 5) + 32.0f;
+            snprintf(text_buf, buf_len, "%3.1fF", temperature);
+            }
+
+            else{
+            temperature = ((float)v / 128) - 64.0f;
+            snprintf(text_buf, buf_len, "%3.1fC", temperature);
+            }
+
+
+
     }
+
 
     static void perf_emissivity_text_func(char* text_buf, size_t buf_len,
                                           uint8_t v) {
