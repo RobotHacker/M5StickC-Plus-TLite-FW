@@ -2,22 +2,37 @@
 #include <stddef.h>
 #include <M5GFX.h>
 #include <WiFi.h>
-
-static constexpr const uint8_t firmware_ver_major = 0;
+static int currenttempmode;
+static constexpr const uint8_t firmware_ver_major = 1;
 static constexpr const uint8_t firmware_ver_minor = 0;
-static constexpr const uint8_t firmware_ver_patch = 8;
+static constexpr const uint8_t firmware_ver_patch = 11;
 
 static constexpr uint8_t frame_width  = 32;
 static constexpr uint8_t frame_height = 24;
 
-static constexpr inline float convertRawToTemperature(int32_t rawdata) {
-    return ((((((float)rawdata / 128) - 64.0f)*9)/5)+32.0f); // Farenheit
-    // return ((float)rawdata / 128) - 64.0f; // Celcius
-}
-static constexpr inline int32_t convertTemperatureToRaw(float temperature) {
-    return (((((temperature-32)*5)/9) + 64) * 128); // Farenheit
-    // return (temperature + 64) * 128; // Celcius
-}
+
+   static inline float convertRawToCelsius(int32_t rawdata, int temp_mode ) {
+    float value = 0 ;
+    currenttempmode = temp_mode;
+    if( temp_mode == 1 )
+        value =  ((((((float)rawdata / 128) - 64.0f)*9)/5)+32.0f); 
+    else
+        value = ((float)rawdata / 128) - 64.0f;
+
+    return value ;
+   }
+
+
+   static inline float convertCelsiusToRaw(float temperature, int temp_mode ) {
+    float value = 0 ;
+
+    if( temp_mode == 1 )
+        value =  (((((temperature-32)*5)/9) + 64) * 128); 
+    else
+        value = (temperature + 64) * 128;
+
+    return value ;
+   }
 
 static constexpr const char mon_tbl[12][4] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -848,6 +863,19 @@ struct config_param_t {
         alarm_mode_hightemp,
         alarm_mode_max,
     };
+
+enum alarm_temp_mode_t {
+    alarm_temp_modeF,
+    alarm_temp_modeC,
+        
+    };
+
+
+
+
+
+
+
     // static constexpr const char* alarm_mode_text[] = { "Disable", "Lower",
     // "Higher" };
 
@@ -986,6 +1014,19 @@ struct config_param_t {
         misc_color_max,
     };
 
+
+    enum misc_temp_mode_t {
+       
+        misc_temp_mode_Celsius,
+        misc_temp_mode_Fahrenheit,
+        misc_temp_mode_max,
+    };
+    static constexpr const int temp_mode_value[] = {0, 1};
+    
+    
+
+
+
     enum cloud_interval_t {
         cloud_interval_5sec,
         cloud_interval_10sec,
@@ -1001,15 +1042,41 @@ struct config_param_t {
     static constexpr const uint16_t cloud_interval_value[] = {
         5, 10, 30, 60, 120, 300, 600, 1800, 3600};
 
-    static void alarm_temperature_text_func(char* text_buf, size_t buf_len,
-                                            uint16_t v) {
-        snprintf(text_buf, buf_len, "%3.1fC", (float)v / 128 - 64);
+
+
+
+
+
+    static void alarm_temperature_text_func(char* text_buf, size_t buf_len, uint16_t v) {
+        float temperature;
+        
+        if ( currenttempmode == 1 ){
+            temperature = (((((float)v / 128) - 64.0f) * 9) / 5) + 32.0f;
+            snprintf(text_buf, buf_len, "%3.1fF", temperature);
+            }
+            else{
+            temperature = ((float)v / 128) - 64.0f;
+            snprintf(text_buf, buf_len, "%3.1fC", temperature);
+            }
     }
 
-    static void sens_temperature_text_func(char* text_buf, size_t buf_len,
-                                           int32_t v) {
-        snprintf(text_buf, buf_len, "%3.1fC", (float)v / 128 - 64);
+    static void sens_temperature_text_func(char* text_buf, size_t buf_len, int32_t v) {
+        float temperature;
+        
+            if ( currenttempmode == 1 ){
+            temperature = (((((float)v / 128) - 64.0f) * 9) / 5) + 32.0f;
+            snprintf(text_buf, buf_len, "%3.1fF", temperature);
+            }
+
+            else{
+            temperature = ((float)v / 128) - 64.0f;
+            snprintf(text_buf, buf_len, "%3.1fC", temperature);
+            }
+
+
+
     }
+
 
     static void perf_emissivity_text_func(char* text_buf, size_t buf_len,
                                           uint8_t v) {
@@ -1073,6 +1140,19 @@ struct config_param_t {
         },
         net_setup_mode_t ::net_setup_mode_off,
         net_setup_mode_t ::net_setup_mode_max};
+        
+
+    config_property_localize_enum_t<misc_temp_mode_t> misc_temp_mode = {
+        {"Temperature", "温度", "温度"},
+        (const localize_text_t[]){
+            {"Celcius", "摄氏度", "摂氏"},
+            {"Fahrenheit", "华氏度", "華氏"},
+            
+
+        },
+        misc_temp_mode_t ::misc_temp_mode_Fahrenheit,
+        misc_temp_mode_t ::misc_temp_mode_max};
+
 
     config_property_localize_enum_t<cloud_interval_t> cloud_interval = {
         {"Upload Interval", "上传间隔时间", "アップロード間隔"},
@@ -1091,8 +1171,12 @@ struct config_param_t {
         cloud_interval_t ::cloud_interval_max};
 
     config_property_value_t<uint16_t> alarm_temperature = {
-        alarm_temperature_text_func, (100 + 64) * 128, (-50 + 64) * 128,
-        (350 + 64) * 128, 32};
+    alarm_temperature_text_func,  // Function pointer to the text formatting function
+    (100 + 64) * 128,             // Default value for the alarm temperature
+    (-50 + 64) * 128,             // Minimum value for the alarm temperature
+    (350 + 64) * 128,             // Maximum value for the alarm temperature
+    32};                          // Step size for adjustments
+    
 
     config_property_localize_enum_t<alarm_mode_t> alarm_mode = {
         {"Alarm Mode", "报警触发条件", "アラーム条件"},

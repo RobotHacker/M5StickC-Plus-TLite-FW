@@ -1,14 +1,16 @@
 Changes:
-- Modified to show temperatures in Fahrenheit.
 - Shortened time to start up (reduce splash screen times.)
+- Added temperature units (C/F) option to other settings.
+- the alarm setting works you just have to change the value to update the text.
 
-Future plans:
-- Add serial commands?
-  - Get pieces of info
-  - Turn off
-- Add temperature units (C/F) option to menu somewhere
 
-# T-Lite-Internal-FW (M5StickC-Plus + MLX90640 Thermal HAT)
+- now avalable in M5burner!
+
+
+Future plans: none (give me idea's)
+
+
+# T-Lite-Internal-CFW (M5StickC-Plus + MLX90640 Thermal HAT)
 
 ### SKU:K126
 
