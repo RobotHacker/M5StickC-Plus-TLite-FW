@@ -5,7 +5,7 @@
 static int currenttempmode;
 static constexpr const uint8_t firmware_ver_major = 1;
 static constexpr const uint8_t firmware_ver_minor = 0;
-static constexpr const uint8_t firmware_ver_patch = 11;
+static constexpr const uint8_t firmware_ver_patch = 12;
 
 static constexpr uint8_t frame_width  = 32;
 static constexpr uint8_t frame_height = 24;
